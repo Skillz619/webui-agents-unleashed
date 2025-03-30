@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BarChart3, Globe, Beaker, Leaf, Search, PenSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,12 +14,13 @@ type DataButtonProps = {
   title: string;
   isActive: boolean;
   onClick: () => void;
+  className?: string;
 };
 
-const DataButton = ({ title, isActive, onClick }: DataButtonProps) => (
+const DataButton = ({ title, isActive, onClick, className }: DataButtonProps) => (
   <Button 
     variant="outline" 
-    className={`${isActive ? 'bg-copilot-blue text-white hover:bg-copilot-lightBlue' : 'bg-white'}`}
+    className={`${isActive ? 'bg-copilot-blue text-white hover:bg-copilot-lightBlue' : 'bg-white'} ${className || ''}`}
     onClick={onClick}
   >
     <span>{title}</span>
