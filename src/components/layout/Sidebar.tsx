@@ -1,5 +1,6 @@
-import React from 'react';
-import { BarChart3, Globe, Beaker, Leaf, Search, PenSquare } from 'lucide-react';
+
+import React, { useEffect, useState } from 'react';
+import { BarChart3, Globe, Beaker, Leaf, Search, PenSquare, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -17,6 +18,13 @@ type DataButtonProps = {
   className?: string;
 };
 
+type HistoryItem = {
+  id: string;
+  title: string;
+  timestamp: Date;
+  active: boolean;
+};
+
 const DataButton = ({ title, isActive, onClick, className }: DataButtonProps) => (
   <Button 
     variant="outline" 
@@ -30,18 +38,50 @@ const DataButton = ({ title, isActive, onClick, className }: DataButtonProps) =>
 const Sidebar = () => {
   const [activeCategory, setActiveCategory] = React.useState('WorldBank');
   const [activeDataType, setActiveDataType] = React.useState('GDP');
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   
   const apiCategories: ApiItem[] = [
     { title: 'WorldBank', icon: <BarChart3 className="w-8 h-8 text-blue-600" /> },
     { title: 'Geography', icon: <Globe className="w-8 h-8 text-gray-600" /> },
     { title: 'Industry', icon: <Beaker className="w-8 h-8 text-gray-600" /> },
   ];
-  
-  const quickAccessLinks = [
-    { title: 'WorldBank GDP Growth API', active: true },
-    { title: 'California Reservoir IDs', active: false },
-    { title: 'Retrieve GASREGW Data FRED', active: false },
-  ];
+
+  // Load history from localStorage on component mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('chatHistory');
+    if (savedHistory) {
+      try {
+        setHistoryItems(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error('Failed to parse chat history', e);
+        // If parsing fails, initialize with empty array
+        setHistoryItems([]);
+      }
+    }
+  }, []);
+
+  // Function to add new history item - will be called from ChatInterface
+  const addHistoryItem = (title: string) => {
+    const newItem: HistoryItem = {
+      id: Date.now().toString(),
+      title: title.length > 30 ? title.substring(0, 30) + '...' : title,
+      timestamp: new Date(),
+      active: true
+    };
+    
+    // Deactivate all other items
+    const updatedItems = historyItems.map(item => ({
+      ...item,
+      active: false
+    }));
+    
+    // Add new item to the beginning of the array
+    const newHistory = [newItem, ...updatedItems].slice(0, 5); // Keep only 5 most recent chats
+    setHistoryItems(newHistory);
+    
+    // Save to localStorage
+    localStorage.setItem('chatHistory', JSON.stringify(newHistory));
+  };
 
   const handleApiClick = (title: string) => {
     console.log(`Clicked on API: ${title}`);
@@ -52,6 +92,26 @@ const Sidebar = () => {
     console.log(`Selected data type: ${type}`);
     setActiveDataType(type);
   };
+
+  const handleHistoryItemClick = (id: string) => {
+    const updatedItems = historyItems.map(item => ({
+      ...item,
+      active: item.id === id
+    }));
+    
+    setHistoryItems(updatedItems);
+    localStorage.setItem('chatHistory', JSON.stringify(updatedItems));
+  };
+
+  // Make the addHistoryItem function available globally
+  // This is a simple way to allow ChatInterface to call it
+  useEffect(() => {
+    (window as any).addChatToHistory = addHistoryItem;
+    
+    return () => {
+      delete (window as any).addChatToHistory;
+    };
+  }, [historyItems]);
 
   return (
     <aside className="w-64 h-full border-r bg-gray-50 p-4 flex flex-col">
@@ -96,18 +156,26 @@ const Sidebar = () => {
           <h3 className="text-sm font-medium">Today</h3>
         </div>
         <div className="space-y-1">
-          {quickAccessLinks.map((link) => (
-            <div 
-              key={link.title} 
-              className={`px-2 py-1 rounded-sm text-sm ${link.active ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-            >
-              {link.title}
+          {historyItems.length > 0 ? (
+            historyItems.map((item) => (
+              <div 
+                key={item.id} 
+                className={`flex items-center px-2 py-1 rounded-sm text-sm ${item.active ? 'bg-gray-200' : 'hover:bg-gray-100'} cursor-pointer`}
+                onClick={() => handleHistoryItemClick(item.id)}
+              >
+                <MessageSquare className="h-3 w-3 mr-2 flex-shrink-0" />
+                <span className="truncate">{item.title}</span>
+              </div>
+            ))
+          ) : (
+            <div className="px-2 py-1 text-sm text-gray-500 italic">
+              No recent chats
             </div>
-          ))}
+          )}
         </div>
       </div>
       
-      <div className="mt-6">
+      <div className="mt-auto">
         <Button variant="ghost" className="w-full justify-start">
           <Search className="w-4 h-4 mr-2" />
           Explore GPTs

@@ -53,6 +53,11 @@ const ChatInterface = () => {
     setInput('');
     setIsTyping(true);
     
+    // Add this chat to the sidebar history
+    if ((window as any).addChatToHistory) {
+      (window as any).addChatToHistory(input);
+    }
+    
     // Analyze query and determine appropriate agent type
     setTimeout(() => {
       let agentType: AgentType = currentAgent;
