@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BarChart3, Globe, Flask, Leaf, Search, PenSquare } from 'lucide-react';
+import { BarChart3, Globe, Beaker, Leaf, Search, PenSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
@@ -14,7 +14,7 @@ const Sidebar = () => {
   const apiCategories: ApiItem[] = [
     { title: 'WorldBank', icon: <BarChart3 className="w-8 h-8 text-blue-600" /> },
     { title: 'Geography', icon: <Globe className="w-8 h-8 text-gray-600" /> },
-    { title: 'Industry', icon: <Flask className="w-8 h-8 text-gray-600" /> },
+    { title: 'Industry', icon: <Beaker className="w-8 h-8 text-gray-600" /> },
   ];
   
   const quickAccessLinks = [

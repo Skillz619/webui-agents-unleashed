@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, PresentationChart, ThumbsUp, ThumbsDown, Plus, Search, Lightbulb, Mic } from 'lucide-react';
+import { Send, BarChart2, ThumbsUp, ThumbsDown, Plus, Search, Lightbulb, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -177,7 +177,7 @@ const ChatInterface = () => {
         <div className="p-4 flex justify-end border-t">
           <div className="flex space-x-2">
             <Button variant="outline" size="icon">
-              <PresentationChart className="w-5 h-5" />
+              <BarChart2 className="w-5 h-5" />
             </Button>
             <Button variant="outline" size="icon">
               <ThumbsUp className="w-5 h-5" />
