@@ -17,11 +17,59 @@ type Message = {
   timestamp: Date;
 };
 
+// Store previous responses to avoid repetition
+const previousResponses: Record<AgentType, string[]> = {
+  general: [],
+  clinical: [],
+  food: []
+};
+
+// Knowledge base for each agent
+const agentKnowledge = {
+  general: {
+    apiInfo: "I can help access various APIs including World Bank economic data, geographic information, and industry statistics.",
+    dataTypes: "I can help with data like GDP, CO2 emissions, and agricultural land metrics.",
+    capabilities: "I'm designed to assist with general inquiries, data visualization, and connecting you to specialized agents.",
+    responses: [
+      "Based on the latest data from our sources, I'd recommend looking at {topic} from a broader perspective. Would you like me to elaborate on specific aspects?",
+      "That's an interesting question about {topic}. There are several approaches we could take to analyze this. Would you prefer a high-level overview or specific data points?",
+      "I've found some relevant information about {topic}. The most recent trends suggest {insight}. Would you like to see a visualization of this data?",
+      "When it comes to {topic}, it's important to consider multiple data sources. I can help you compare information from different APIs to get a more complete picture.",
+      "I noticed your interest in {topic}. This intersects with several domains I can help with. Would you like me to focus on economic indicators, geographic patterns, or industry-specific metrics?"
+    ]
+  },
+  clinical: {
+    medicalConditions: ["COVID-19", "diabetes", "hypertension", "asthma", "cancer", "heart disease", "Alzheimer's"],
+    treatments: ["medication", "surgery", "therapy", "lifestyle changes", "preventive care"],
+    research: ["clinical trials", "medical studies", "evidence-based medicine", "medical journals"],
+    responses: [
+      "From a clinical perspective, {topic} has been the subject of several recent studies. The consensus among medical professionals suggests {insight}.",
+      "Medical research on {topic} has evolved significantly in recent years. Current evidence indicates {insight}, though more research is still needed in some areas.",
+      "When evaluating {topic} from a medical standpoint, it's crucial to consider both the established treatments and emerging approaches. The most promising directions include {insight}.",
+      "Clinical guidelines for {topic} recommend a multi-faceted approach. The latest protocols emphasize {insight}, especially for patients with complicating factors.",
+      "Healthcare professionals typically approach {topic} by first assessing {insight}. Would you like me to explain the standard diagnostic procedures or treatment options?"
+    ]
+  },
+  food: {
+    agriculture: ["sustainable farming", "crop yields", "irrigation", "soil health", "pesticide use"],
+    nutrition: ["food security", "malnutrition", "dietary guidelines", "nutrient deficiencies"],
+    global: ["food distribution", "climate impact", "agricultural policy", "trade barriers"],
+    responses: [
+      "Agricultural data regarding {topic} shows significant regional variations. In areas with similar conditions to what you're describing, farmers have found success with {insight}.",
+      "From a food security perspective, {topic} presents both challenges and opportunities. Recent innovations have demonstrated that {insight} can make a substantial difference.",
+      "Nutritional analysis of {topic} reveals important connections to overall food systems. Experts in this field generally recommend {insight} as a sustainable approach.",
+      "When we examine {topic} through the lens of global food production, we see patterns emerging around {insight}. This has implications for both local producers and international supply chains.",
+      "Sustainable approaches to {topic} typically incorporate {insight}. Would you be interested in examples of successful implementation in similar contexts?"
+    ]
+  }
+};
+
 const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<AgentType>('general');
+  const [conversationContext, setConversationContext] = useState<Record<string, any>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -63,6 +111,16 @@ const ChatInterface = () => {
       let agentType: AgentType = currentAgent;
       const lowerCaseInput = input.toLowerCase();
       
+      // Store the current query in context
+      const newContext = { ...conversationContext };
+      newContext.lastQuery = input;
+      
+      // Extract potential topics from the query
+      const extractedTopics = extractTopicsFromQuery(lowerCaseInput, agentType);
+      if (extractedTopics.length > 0) {
+        newContext.currentTopic = extractedTopics[0];
+      }
+      
       // Simple keyword-based agent routing
       if (lowerCaseInput.includes('clinical') || lowerCaseInput.includes('medical') || 
           lowerCaseInput.includes('health') || lowerCaseInput.includes('disease') || 
@@ -76,13 +134,16 @@ const ChatInterface = () => {
       
       if (agentType !== currentAgent) {
         setCurrentAgent(agentType);
+        newContext.agentSwitched = true;
         toast({
           title: "Agent Changed",
           description: `Your query was routed to the ${agentType.charAt(0).toUpperCase() + agentType.slice(1)} agent`,
         });
       }
       
-      const responseContent = getAgentResponse(agentType, input);
+      setConversationContext(newContext);
+      
+      const responseContent = getAgentResponse(agentType, input, newContext);
       
       const agentMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -92,48 +153,163 @@ const ChatInterface = () => {
         timestamp: new Date(),
       };
       
+      // Store this response to avoid repetition
+      previousResponses[agentType].push(responseContent);
+      if (previousResponses[agentType].length > 5) {
+        previousResponses[agentType].shift();
+      }
+      
       setMessages(prev => [...prev, agentMessage]);
       setIsTyping(false);
     }, 1500);
   };
 
-  const getAgentResponse = (agentType: AgentType, query: string): string => {
-    const lowerCaseQuery = query.toLowerCase();
+  const extractTopicsFromQuery = (query: string, agentType: AgentType): string[] => {
+    const topics: string[] = [];
     
+    // Extract potential topics based on agent type
     switch(agentType) {
       case 'clinical':
-        if (lowerCaseQuery.includes('covid') || lowerCaseQuery.includes('coronavirus')) {
-          return "According to our clinical database, COVID-19 is caused by the SARS-CoV-2 virus. Symptoms can include fever, cough, and shortness of breath. Vaccination remains one of the most effective preventive measures.";
-        } else if (lowerCaseQuery.includes('diabetes')) {
-          return "Our medical research indicates that diabetes is a chronic condition affecting how your body processes blood sugar. There are two main types: Type 1 (where the body doesn't produce insulin) and Type 2 (where the body doesn't use insulin effectively).";
-        } else if (lowerCaseQuery.includes('treatment') || lowerCaseQuery.includes('therapy')) {
-          return "Medical treatments should always be prescribed by qualified healthcare professionals. Our clinical database can provide research-backed information on various treatment approaches, but this should not replace professional medical advice.";
-        } else {
-          return "Based on our clinical research database, I can provide evidence-based information on medical conditions, treatments, and health research. What specific medical topic would you like me to analyze?";
-        }
+        agentKnowledge.clinical.medicalConditions.forEach(condition => {
+          if (query.includes(condition.toLowerCase())) {
+            topics.push(condition);
+          }
+        });
+        agentKnowledge.clinical.treatments.forEach(treatment => {
+          if (query.includes(treatment.toLowerCase())) {
+            topics.push(treatment);
+          }
+        });
+        break;
         
       case 'food':
-        if (lowerCaseQuery.includes('climate') || lowerCaseQuery.includes('warming')) {
-          return "Climate change is significantly impacting global food security. Rising temperatures affect crop yields, while changing precipitation patterns disrupt traditional growing seasons. Our agricultural database shows that adaptive farming techniques like drought-resistant crops are becoming increasingly important.";
-        } else if (lowerCaseQuery.includes('nutrition') || lowerCaseQuery.includes('diet')) {
-          return "Nutritional security varies greatly across regions. Our food database indicates that balanced diets containing adequate proteins, carbohydrates, fats, and micronutrients are essential for human health, yet approximately 2 billion people lack regular access to safe, nutritious food.";
-        } else if (lowerCaseQuery.includes('farm') || lowerCaseQuery.includes('agriculture')) {
-          return "Sustainable farming practices are crucial for long-term food security. Our agricultural data shows that practices like crop rotation, minimal tillage, and integrated pest management can maintain soil health while increasing productivity over time.";
-        } else {
-          return "Our food security database contains information on global agriculture trends, nutrition, sustainable farming practices, and food distribution systems. What specific aspect of food security would you like to explore?";
+        agentKnowledge.food.agriculture.forEach(term => {
+          if (query.includes(term.toLowerCase())) {
+            topics.push(term);
+          }
+        });
+        agentKnowledge.food.nutrition.forEach(term => {
+          if (query.includes(term.toLowerCase())) {
+            topics.push(term);
+          }
+        });
+        break;
+        
+      default:
+        // For general agent, extract common nouns or topics
+        const potentialTopics = ["data", "GDP", "CO2", "emissions", "land", "statistics", "visualization", "economy"];
+        potentialTopics.forEach(topic => {
+          if (query.includes(topic.toLowerCase())) {
+            topics.push(topic);
+          }
+        });
+    }
+    
+    // If no specific topic was found, extract potential topic from query
+    if (topics.length === 0) {
+      const words = query.split(' ');
+      // Look for longer words that might be topics
+      words.forEach(word => {
+        if (word.length > 5 && !["about", "would", "should", "could", "please", "thank"].includes(word)) {
+          topics.push(word);
         }
+      });
+    }
+    
+    return topics;
+  };
+
+  const getAgentResponse = (agentType: AgentType, query: string, context: Record<string, any>): string => {
+    const lowerCaseQuery = query.toLowerCase();
+    const responseSet = agentKnowledge[agentType].responses;
+    
+    // Determine a topic to focus the response around
+    let topic = context.currentTopic || "this subject";
+    
+    // Generate some contextual insight based on the query and agent type
+    let insight = "";
+    switch(agentType) {
+      case 'clinical':
+        if (lowerCaseQuery.includes('treatment') || lowerCaseQuery.includes('cure')) {
+          insight = "a combination of medication, lifestyle changes, and regular monitoring";
+        } else if (lowerCaseQuery.includes('symptom') || lowerCaseQuery.includes('diagnosis')) {
+          insight = "early detection through comprehensive screening protocols";
+        } else if (lowerCaseQuery.includes('research') || lowerCaseQuery.includes('study')) {
+          insight = "promising results in phase II clinical trials";
+        } else {
+          insight = "a personalized approach based on patient history and risk factors";
+        }
+        break;
+        
+      case 'food':
+        if (lowerCaseQuery.includes('sustainable') || lowerCaseQuery.includes('environment')) {
+          insight = "integrated pest management and crop rotation techniques";
+        } else if (lowerCaseQuery.includes('nutrition') || lowerCaseQuery.includes('diet')) {
+          insight = "balanced macronutrient profiles and micronutrient fortification";
+        } else if (lowerCaseQuery.includes('global') || lowerCaseQuery.includes('world')) {
+          insight = "decentralized distribution networks and cold chain technology";
+        } else {
+          insight = "locally adapted solutions that respect traditional knowledge";
+        }
+        break;
         
       default: // general agent
-        if (lowerCaseQuery.includes('data') || lowerCaseQuery.includes('api')) {
-          return "I can help you access and interpret various data APIs. Would you like to explore economic indicators like GDP, environmental data such as CO2 emissions, or perhaps agricultural land usage statistics? You can also switch to our specialized agents for more domain-specific assistance.";
-        } else if (lowerCaseQuery.includes('help') || lowerCaseQuery.includes('can you')) {
-          return "I'm your general assistant, able to help with a wide range of queries. For specialized information, I can route you to our Clinical agent for health-related questions or our Food Security agent for agricultural and nutrition topics. What would you like to know?";
-        } else if (lowerCaseQuery.includes('agent') || lowerCaseQuery.includes('switch')) {
-          return "You can switch between three specialized agents: the General agent (that's me) for broad topics, the Clinical agent for health and medical research, and the Food Security agent for agriculture and nutrition information. Just click on the agent buttons above or ask a question related to that domain.";
+        if (lowerCaseQuery.includes('data') || lowerCaseQuery.includes('statistics')) {
+          insight = "a 15% year-over-year change in key indicators";
+        } else if (lowerCaseQuery.includes('api') || lowerCaseQuery.includes('source')) {
+          insight = "combining multiple data sources for more robust analysis";
+        } else if (lowerCaseQuery.includes('trend') || lowerCaseQuery.includes('pattern')) {
+          insight = "significant correlations between previously unconnected variables";
         } else {
-          return "I'm your general web assistant. I can help you navigate various data sources, answer general questions, or connect you with our specialized agents for clinical or food security information. How can I assist you today?";
+          insight = "patterns that become apparent when visualizing the data";
         }
     }
+    
+    // Special cases that override the template responses
+    if (lowerCaseQuery.includes('hello') || lowerCaseQuery.includes('hi ')) {
+      return `Hello! I'm the ${agentType.charAt(0).toUpperCase() + agentType.slice(1)} agent. How can I assist you today?`;
+    }
+    
+    if (lowerCaseQuery.includes('thank')) {
+      return "You're welcome! Is there anything else you'd like to know about?";
+    }
+    
+    if (lowerCaseQuery.includes('help')) {
+      switch(agentType) {
+        case 'clinical':
+          return "As the Clinical agent, I can provide information on medical conditions, treatments, research findings, and health guidelines. What specific health topic would you like to explore?";
+        case 'food':
+          return "As the Food Security agent, I can provide insights on agricultural practices, nutrition, global food distribution, and sustainable farming. What aspect of food systems would you like to learn about?";
+        default:
+          return "I'm your general web assistant. I can help navigate various data sources, answer questions about economic indicators, environmental statistics, or connect you with specialized agents for clinical or food security information.";
+      }
+    }
+    
+    // Check if the agent was just switched
+    if (context.agentSwitched) {
+      switch(agentType) {
+        case 'clinical':
+          return `I've switched to the Clinical agent to better address your question about ${topic}. From a medical perspective, what specific aspect would you like to explore?`;
+        case 'food':
+          return `I'm now operating as the Food Security agent to help with your question about ${topic}. What particular aspect of food systems or agriculture would you like to know about?`;
+        default:
+          return `I've switched to the General agent. I can provide broad information on various topics including data analytics, economic indicators, and more. How can I assist with your interest in ${topic}?`;
+      }
+    }
+    
+    // Avoid repeating the exact same response
+    let selectedResponse = "";
+    let attempts = 0;
+    
+    do {
+      const randomIndex = Math.floor(Math.random() * responseSet.length);
+      selectedResponse = responseSet[randomIndex]
+        .replace("{topic}", topic)
+        .replace("{insight}", insight);
+      attempts++;
+    } while (previousResponses[agentType].includes(selectedResponse) && attempts < 10);
+    
+    return selectedResponse;
   };
 
   const changeAgent = (type: AgentType) => {
@@ -231,3 +407,4 @@ const ChatInterface = () => {
 };
 
 export default ChatInterface;
+
