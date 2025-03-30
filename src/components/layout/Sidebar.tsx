@@ -3,6 +3,7 @@ import React from 'react';
 import { BarChart3, Globe, Beaker, Leaf, Search, PenSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 type ApiItem = {
   title: string;
@@ -10,7 +11,26 @@ type ApiItem = {
   active?: boolean;
 };
 
+type DataButtonProps = {
+  title: string;
+  isActive: boolean;
+  onClick: () => void;
+};
+
+const DataButton = ({ title, isActive, onClick }: DataButtonProps) => (
+  <Button 
+    variant="outline" 
+    className={`${isActive ? 'bg-copilot-blue text-white hover:bg-copilot-lightBlue' : 'bg-white'}`}
+    onClick={onClick}
+  >
+    <span>{title}</span>
+  </Button>
+);
+
 const Sidebar = () => {
+  const [activeCategory, setActiveCategory] = React.useState('WorldBank');
+  const [activeDataType, setActiveDataType] = React.useState('GDP');
+  
   const apiCategories: ApiItem[] = [
     { title: 'WorldBank', icon: <BarChart3 className="w-8 h-8 text-blue-600" /> },
     { title: 'Geography', icon: <Globe className="w-8 h-8 text-gray-600" /> },
@@ -25,6 +45,12 @@ const Sidebar = () => {
 
   const handleApiClick = (title: string) => {
     console.log(`Clicked on API: ${title}`);
+    setActiveCategory(title);
+  };
+  
+  const handleDataTypeClick = (type: string) => {
+    console.log(`Selected data type: ${type}`);
+    setActiveDataType(type);
   };
 
   return (
@@ -46,20 +72,24 @@ const Sidebar = () => {
       </div>
       
       <div className="flex space-x-2 mt-4">
-        <Button 
-          variant="outline" 
-          className="bg-copilot-blue text-white hover:bg-copilot-lightBlue"
-        >
-          <span>GDP</span>
-        </Button>
-        <Button variant="outline" className="bg-white">
-          <span>CO2</span>
-        </Button>
+        <DataButton 
+          title="GDP"
+          isActive={activeDataType === 'GDP'}
+          onClick={() => handleDataTypeClick('GDP')}
+        />
+        <DataButton 
+          title="CO2"
+          isActive={activeDataType === 'CO2'}
+          onClick={() => handleDataTypeClick('CO2')}
+        />
       </div>
       
-      <Button variant="outline" className="mt-2 bg-white">
-        <span>Agri. Land</span>
-      </Button>
+      <DataButton 
+        title="Agri. Land"
+        isActive={activeDataType === 'Agri. Land'}
+        onClick={() => handleDataTypeClick('Agri. Land')}
+        className="mt-2"
+      />
       
       <div className="mt-4">
         <div className="flex items-center py-2">
