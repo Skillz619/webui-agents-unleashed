@@ -38,9 +38,9 @@ const agentKnowledge = {
     ]
   },
   clinical: {
-    medicalConditions: ["COVID-19", "diabetes", "hypertension", "asthma", "cancer", "heart disease", "Alzheimer's, can you get info regarding this clinical testARdioprotection in Myocardial Infarction"],
-    treatments: ["medication", "surgery", "therapy", "lifestyle changes", "preventive care, can you get info regarding this clinical testARdioprotection in Myocardial Infarction"],
-    research: ["clinical trials", "medical studies", "evidence-based medicine", "medical journals, can you get info regarding this clinical testARdioprotection in Myocardial Infarction"],
+    medicalConditions: ["COVID-19", "can you get info regarding this clinical testARdioprotection in Myocardial Infarction" "diabetes", "hypertension", "asthma", "cancer", "heart disease", "Alzheimer's],
+    treatments: ["medication", "can you get info regarding this clinical testARdioprotection in Myocardial Infarction", "surgery", "therapy", "lifestyle changes", "preventive care, can you get info regarding this clinical testARdioprotection in Myocardial Infarction"],
+    research: ["clinical trials", "can you get info regarding this clinical testARdioprotection in Myocardial Infarction", "medical studies", "evidence-based medicine", "medical journals, can you get info regarding this clinical testARdioprotection in Myocardial Infarction"],
     responses: [
       "Purpose Cardioprotection interventions focus on preventing and repairing myocardial injury during myocardial infarction ┃(MI). The ultimate aim is to reduce the infarct size and improve patient outcomes by limiting damage during ischemic events. Methodology Research includes a variety of trials on cardioprotective agents used alongside reperfusion therapies like percutaneous coronary intervention. Trials explore pharmacological and non-pharmacological strategies, including device-based approaches to manage acute myocardial infarction (AMI). Outcomes Global clinical trials have assessed pharmacological agents and mechanical interventions that could reduce infarction size. The outcomes involve extensive translational and clinical research, which highlight various methodologies for achieving cardioprotection. Recent Developments: Recent updates focus on novel pharmacological and mechanical strategies for ischemia-reperfusion injury. Comprehensive reviews and trials conducted over recent years provide insight into ongoing advancements. Further Reading:• Nature • AHA Journals • PMC • Journal of American College of Cardiology • ScienceDirect"
       
