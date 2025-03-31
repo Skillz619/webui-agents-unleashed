@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { X, BarChart, LineChart as LineChartIcon, PieChart, Download, Share2 } from 'lucide-react';
+import { X, BarChart, LineChart as LineChartIcon, PieChart, Download, Share2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -30,16 +29,35 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface DynamicChartProps {
   data: any;
   onClose: () => void;
 }
 
+interface SavedWidget {
+  id: string;
+  title: string;
+  data: any;
+  chartType: 'line' | 'bar' | 'pie';
+  timestamp: string;
+}
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 const DynamicChart: React.FC<DynamicChartProps> = ({ data, onClose }) => {
   const [chartType, setChartType] = useState<'line' | 'bar' | 'pie'>('line');
+  const [isAddWidgetDialogOpen, setIsAddWidgetDialogOpen] = useState(false);
+  const [widgetTitle, setWidgetTitle] = useState('');
   const { toast } = useToast();
   
   // Extract data for visualization
@@ -119,6 +137,44 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ data, onClose }) => {
         }
       }
     }
+  };
+
+  // Function to save widget
+  const saveWidget = () => {
+    if (!widgetTitle.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a title for your widget",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const newWidget: SavedWidget = {
+      id: Date.now().toString(),
+      title: widgetTitle,
+      data: data,
+      chartType: chartType,
+      timestamp: new Date().toISOString()
+    };
+
+    // Get existing widgets from localStorage or initialize as empty array
+    const existingWidgets = JSON.parse(localStorage.getItem('savedWidgets') || '[]');
+    
+    // Add new widget to the array
+    const updatedWidgets = [newWidget, ...existingWidgets];
+    
+    // Save back to localStorage
+    localStorage.setItem('savedWidgets', JSON.stringify(updatedWidgets));
+    
+    // Close dialog and reset state
+    setIsAddWidgetDialogOpen(false);
+    setWidgetTitle('');
+    
+    toast({
+      title: "Widget Saved",
+      description: `"${widgetTitle}" has been added to your widgets`
+    });
   };
 
   return (
@@ -247,6 +303,15 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ data, onClose }) => {
       </Tabs>
       
       <div className="flex justify-end space-x-2 mt-4">
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-2" 
+          onClick={() => setIsAddWidgetDialogOpen(true)}
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Widget</span>
+        </Button>
+        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="flex items-center gap-2">
@@ -273,6 +338,34 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ data, onClose }) => {
         
         <Button variant="outline" onClick={onClose}>Close</Button>
       </div>
+
+      <Dialog open={isAddWidgetDialogOpen} onOpenChange={setIsAddWidgetDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Save as Widget</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="widget-title" className="text-right">
+                Title
+              </Label>
+              <Input
+                id="widget-title"
+                value={widgetTitle}
+                onChange={(e) => setWidgetTitle(e.target.value)}
+                className="col-span-3"
+                placeholder="Enter widget title"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddWidgetDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveWidget}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

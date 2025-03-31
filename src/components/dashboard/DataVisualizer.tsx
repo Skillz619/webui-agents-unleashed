@@ -21,12 +21,17 @@ const sampleData = [
 interface DataVisualizerProps {
   title?: string;
   dataSource?: string;
+  customData?: any[];
 }
 
 const DataVisualizer: React.FC<DataVisualizerProps> = ({ 
   title = "GDP Growth Rate", 
-  dataSource = "https://api.worldbank.org/v2/country/WLD/indicator/NY.GDP.MKTP.KD.ZG?format=json" 
+  dataSource = "https://api.worldbank.org/v2/country/WLD/indicator/NY.GDP.MKTP.KD.ZG?format=json",
+  customData
 }) => {
+  // Use custom data if provided, otherwise use sample data
+  const data = customData || sampleData;
+  
   return (
     <div className="w-full bg-white rounded-lg shadow-sm overflow-hidden">
       <div className="p-4 border-b">
@@ -37,7 +42,7 @@ const DataVisualizer: React.FC<DataVisualizerProps> = ({
       <div className="p-4 h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            data={sampleData}
+            data={data}
             margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
           >
             <CartesianGrid strokeDasharray="3 3" />
@@ -61,7 +66,7 @@ const DataVisualizer: React.FC<DataVisualizerProps> = ({
       
       <div className="p-2 bg-gray-50 border-t flex justify-end space-x-2">
         <div className="flex items-center text-xs text-gray-500">
-          <input type="checkbox" id="showLabel" className="mr-1" checked />
+          <input type="checkbox" id="showLabel" className="mr-1" checked readOnly />
           <label htmlFor="showLabel">LABEL</label>
         </div>
       </div>

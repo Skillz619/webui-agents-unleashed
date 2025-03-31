@@ -1,9 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import { BarChart3, Globe, Beaker, Leaf, Search, PenSquare, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import WidgetList from '@/components/dashboard/WidgetList';
 
 type ApiItem = {
   title: string;
@@ -46,7 +46,6 @@ const Sidebar = () => {
     { title: 'Industry', icon: <Beaker className="w-8 h-8 text-gray-600" /> },
   ];
 
-  // Load history from localStorage on component mount
   useEffect(() => {
     const savedHistory = localStorage.getItem('chatHistory');
     if (savedHistory) {
@@ -54,13 +53,11 @@ const Sidebar = () => {
         setHistoryItems(JSON.parse(savedHistory));
       } catch (e) {
         console.error('Failed to parse chat history', e);
-        // If parsing fails, initialize with empty array
         setHistoryItems([]);
       }
     }
   }, []);
 
-  // Function to add new history item - will be called from ChatInterface
   const addHistoryItem = (title: string) => {
     const newItem: HistoryItem = {
       id: Date.now().toString(),
@@ -69,17 +66,14 @@ const Sidebar = () => {
       active: true
     };
     
-    // Deactivate all other items
     const updatedItems = historyItems.map(item => ({
       ...item,
       active: false
     }));
     
-    // Add new item to the beginning of the array
-    const newHistory = [newItem, ...updatedItems].slice(0, 5); // Keep only 5 most recent chats
+    const newHistory = [newItem, ...updatedItems].slice(0, 5);
     setHistoryItems(newHistory);
     
-    // Save to localStorage
     localStorage.setItem('chatHistory', JSON.stringify(newHistory));
   };
 
@@ -103,8 +97,6 @@ const Sidebar = () => {
     localStorage.setItem('chatHistory', JSON.stringify(updatedItems));
   };
 
-  // Make the addHistoryItem function available globally
-  // This is a simple way to allow ChatInterface to call it
   useEffect(() => {
     (window as any).addChatToHistory = addHistoryItem;
     
@@ -150,6 +142,10 @@ const Sidebar = () => {
         onClick={() => handleDataTypeClick('Agri. Land')}
         className="mt-2"
       />
+      
+      <div className="mt-4">
+        <WidgetList />
+      </div>
       
       <div className="mt-4">
         <div className="flex items-center py-2">
