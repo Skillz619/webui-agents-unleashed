@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, BarChart, LineChart as LineChartIcon, PieChart } from 'lucide-react';
+import { X, BarChart, LineChart as LineChartIcon, PieChart, Download, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -23,6 +23,13 @@ import {
   ChartTooltip, 
   ChartTooltipContent
 } from '@/components/ui/chart';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DynamicChartProps {
   data: any;
@@ -33,6 +40,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 
 const DynamicChart: React.FC<DynamicChartProps> = ({ data, onClose }) => {
   const [chartType, setChartType] = useState<'line' | 'bar' | 'pie'>('line');
+  const { toast } = useToast();
   
   // Extract data for visualization
   const chartData = data.data || [];
@@ -48,6 +56,70 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ data, onClose }) => {
     name: metric,
     value: chartData.reduce((sum: number, item: any) => sum + Number(item[metric]), 0)
   }));
+
+  // Function to download data as JSON file
+  const downloadData = () => {
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${title.toLowerCase().replace(/\s+/g, '-')}-data.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Download Complete",
+      description: "Your data file has been downloaded"
+    });
+  };
+
+  // Function to share data
+  const shareData = async (method: 'clipboard' | 'navigator') => {
+    if (method === 'clipboard') {
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+        toast({
+          title: "Copied to Clipboard",
+          description: "Data JSON has been copied to your clipboard"
+        });
+      } catch (err) {
+        toast({
+          title: "Copy Failed",
+          description: "Could not copy to clipboard",
+          variant: "destructive"
+        });
+      }
+    } else if (method === 'navigator' && navigator.share) {
+      try {
+        const file = new File([JSON.stringify(data, null, 2)], 
+          `${title.toLowerCase().replace(/\s+/g, '-')}-data.json`, 
+          { type: 'application/json' }
+        );
+        
+        await navigator.share({
+          title: title,
+          text: description,
+          files: [file]
+        });
+        
+        toast({
+          title: "Shared Successfully",
+          description: "Your data has been shared"
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          toast({
+            title: "Share Failed",
+            description: "Could not share the data",
+            variant: "destructive"
+          });
+        }
+      }
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 space-y-4">
@@ -175,6 +247,30 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ data, onClose }) => {
       </Tabs>
       
       <div className="flex justify-end space-x-2 mt-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Share2 className="w-4 h-4" />
+              <span>Share</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => shareData('clipboard')}>
+              Copy to Clipboard
+            </DropdownMenuItem>
+            {navigator.share && (
+              <DropdownMenuItem onClick={() => shareData('navigator')}>
+                Share...
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        <Button variant="outline" className="flex items-center gap-2" onClick={downloadData}>
+          <Download className="w-4 h-4" />
+          <span>Download</span>
+        </Button>
+        
         <Button variant="outline" onClick={onClose}>Close</Button>
       </div>
     </div>
