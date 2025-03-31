@@ -54,11 +54,28 @@ const agentKnowledge = {
     nutrition: ["food security", "malnutrition", "dietary guidelines", "nutrient deficiencies"],
     global: ["food distribution", "climate impact", "agricultural policy", "trade barriers"],
     responses: [
-      "Agricultural data regarding {topic} shows significant regional variations. In areas with similar conditions to what you're describing, farmers have found success with {insight}.",
-      "From a food security perspective, {topic} presents both challenges and opportunities. Recent innovations have demonstrated that {insight} can make a substantial difference.",
-      "Nutritional analysis of {topic} reveals important connections to overall food systems. Experts in this field generally recommend {insight} as a sustainable approach.",
-      "When we examine {topic} through the lens of global food production, we see patterns emerging around {insight}. This has implications for both local producers and international supply chains.",
-      "Sustainable approaches to {topic} typically incorporate {insight}. Would you be interested in examples of successful implementation in similar contexts?"
+      "The six transformation pathways to address the major drivers of food insecurity and malnutrition are:           ┃
+
+┃  1 Integration of Humanitarian, Development, and Peacebuilding Policies: This strategy focuses on addressing    ┃
+┃    the root causes of food insecurity, particularly in conflict-affected areas, by aligning policies from       ┃
+┃    humanitarian, development, and peace sectors.                                                                ┃
+┃  2 Scaling Up Climate Resilience Across Food Systems: This pathway involves improving climate resilience by     ┃
+┃    adopting sustainable farming practices and enhancing early warning systems to manage risks from climate      ┃
+┃    change.                                                                                                      ┃
+┃  3 Strengthening Resilience of Food Supply Chains: The focus here is on improving infrastructure, logistics,    ┃
+┃    and systems to ensure food distribution stability even in the face of disruptions like pandemics or natural  ┃
+┃    disasters.                                                                                                   ┃
+┃  4 Bioscience Innovation for Adaptive and Transformative Food Systems: Using technology and bioscience          ┃
+┃    innovations to improve crop yields and nutritional content, tackling malnutrition and food scarcity.         ┃
+┃  5 Building Inclusive, Sustainable, and Diverse Food Systems: This involves promoting inclusivity and           ┃
+┃    sustainability by supporting small-scale farmers and diverse production and consumption patterns.            ┃
+┃  6 Promoting Healthy and Sustainable Consumption: Encourages dietary changes towards healthier and more         ┃
+┃    sustainable consumption patterns, reducing malnutrition and diet-related diseases.                           ┃
+┃                                                                                                                 ┃
+┃ These pathways provide comprehensive strategies targeting different aspects of food systems, from production to ┃
+┃ consumption, to effectively tackle food insecurity and malnutrition.                                            ┃
+┃                                                                                                                 ┃
+┃ The response was provided by utilizing the expertise of the food agent."
     ]
   }
 };
