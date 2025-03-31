@@ -6,6 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { LayoutGrid, Trash2 } from 'lucide-react';
 import DataVisualizer from './DataVisualizer';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface SavedWidget {
   id: string;
@@ -19,6 +21,8 @@ const WidgetList = () => {
   const [widgets, setWidgets] = useState<SavedWidget[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [widgetToDelete, setWidgetToDelete] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Load widgets from localStorage when component mounts
   useEffect(() => {
@@ -39,6 +43,27 @@ const WidgetList = () => {
       localStorage.setItem('savedWidgets', JSON.stringify(updatedWidgets));
       setWidgetToDelete(null);
     }
+  };
+
+  const handleWidgetClick = (widget: SavedWidget, event: React.MouseEvent) => {
+    // If clicking the delete button, do not navigate
+    if ((event.target as HTMLElement).closest('button')) {
+      return;
+    }
+    
+    // Store the selected widget in sessionStorage to be used by the chat interface
+    sessionStorage.setItem('selectedWidget', JSON.stringify(widget));
+    
+    // Close the drawer
+    setIsOpen(false);
+    
+    // Navigate to home page
+    navigate('/');
+    
+    toast({
+      title: "Widget Selected",
+      description: `Loading visualization for "${widget.title}"`,
+    });
   };
 
   return (
@@ -70,12 +95,19 @@ const WidgetList = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-8">
                 {widgets.map((widget) => (
-                  <div key={widget.id} className="relative border rounded-lg shadow-sm overflow-hidden">
+                  <div 
+                    key={widget.id} 
+                    className="relative border rounded-lg shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={(e) => handleWidgetClick(widget, e)}
+                  >
                     <Button
                       variant="ghost"
                       size="icon"
                       className="absolute top-2 right-2 z-10 bg-background/80 hover:bg-background"
-                      onClick={() => handleDeleteWidget(widget.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteWidget(widget.id);
+                      }}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>

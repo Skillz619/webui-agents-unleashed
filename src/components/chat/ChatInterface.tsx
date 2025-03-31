@@ -18,14 +18,12 @@ type Message = {
   jsonData?: any;
 };
 
-// Store previous responses to avoid repetition
 const previousResponses: Record<AgentType, string[]> = {
   general: [],
   clinical: [],
   food: []
 };
 
-// Knowledge base for each agent
 const agentKnowledge = {
   general: {
     apiInfo: "I can help access various APIs including World Bank economic data, geographic information, and industry statistics.",
@@ -84,6 +82,21 @@ const ChatInterface = () => {
     }
   }, [messages]);
 
+  useEffect(() => {
+    const selectedWidgetJson = sessionStorage.getItem('selectedWidget');
+    if (selectedWidgetJson) {
+      try {
+        const selectedWidget = JSON.parse(selectedWidgetJson);
+        setVisualizationData(selectedWidget.data);
+        setShowVisualization(true);
+        
+        sessionStorage.removeItem('selectedWidget');
+      } catch (error) {
+        console.error('Error parsing selected widget:', error);
+      }
+    }
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -104,34 +117,28 @@ const ChatInterface = () => {
     setInput('');
     setIsTyping(true);
     
-    // Add this chat to the sidebar history
     if ((window as any).addChatToHistory) {
       (window as any).addChatToHistory(input);
     }
     
-    // Analyze query and determine appropriate agent type
     setTimeout(() => {
       let agentType: AgentType = currentAgent;
       const lowerCaseInput = input.toLowerCase();
       
-      // Store the current query in context
       const newContext = { ...conversationContext };
       newContext.lastQuery = input;
       
-      // Extract potential topics from the query
       const extractedTopics = extractTopicsFromQuery(lowerCaseInput, agentType);
       if (extractedTopics.length > 0) {
         newContext.currentTopic = extractedTopics[0];
       }
       
-      // Check if JSON format was requested
       const isJsonRequested = lowerCaseInput.includes('json') || 
                              lowerCaseInput.includes('data format') || 
                              lowerCaseInput.includes('format data');
       
       newContext.jsonRequested = isJsonRequested;
       
-      // Simple keyword-based agent routing
       if (lowerCaseInput.includes('clinical') || lowerCaseInput.includes('medical') || 
           lowerCaseInput.includes('health') || lowerCaseInput.includes('disease') || 
           lowerCaseInput.includes('treatment') || lowerCaseInput.includes('doctor')) {
@@ -156,10 +163,8 @@ const ChatInterface = () => {
       let responseContent = getAgentResponse(agentType, input, newContext);
       let jsonData = null;
       
-      // If JSON was requested, generate sample data based on the agent type and query
       if (isJsonRequested) {
         jsonData = generateSampleData(agentType, input, extractedTopics);
-        // Append JSON data to the response
         responseContent += `\n\nHere's the data in JSON format:\n\`\`\`json\n${JSON.stringify(jsonData, null, 2)}\n\`\`\``;
       }
       
@@ -172,7 +177,6 @@ const ChatInterface = () => {
         jsonData: jsonData
       };
       
-      // Store this response to avoid repetition
       previousResponses[agentType].push(responseContent);
       if (previousResponses[agentType].length > 5) {
         previousResponses[agentType].shift();
@@ -180,7 +184,6 @@ const ChatInterface = () => {
       
       setMessages(prev => [...prev, agentMessage]);
       
-      // If JSON data is available, make it available for visualization
       if (jsonData) {
         setVisualizationData(jsonData);
       }
@@ -192,7 +195,6 @@ const ChatInterface = () => {
   const extractTopicsFromQuery = (query: string, agentType: AgentType): string[] => {
     const topics: string[] = [];
     
-    // Extract potential topics based on agent type
     switch(agentType) {
       case 'clinical':
         agentKnowledge.clinical.medicalConditions.forEach(condition => {
@@ -221,7 +223,6 @@ const ChatInterface = () => {
         break;
         
       default:
-        // For general agent, extract common nouns or topics
         const potentialTopics = ["data", "GDP", "CO2", "emissions", "land", "statistics", "visualization", "economy"];
         potentialTopics.forEach(topic => {
           if (query.includes(topic.toLowerCase())) {
@@ -230,10 +231,8 @@ const ChatInterface = () => {
         });
     }
     
-    // If no specific topic was found, extract potential topic from query
     if (topics.length === 0) {
       const words = query.split(' ');
-      // Look for longer words that might be topics
       words.forEach(word => {
         if (word.length > 5 && !["about", "would", "should", "could", "please", "thank"].includes(word)) {
           topics.push(word);
@@ -248,10 +247,8 @@ const ChatInterface = () => {
     const lowerCaseQuery = query.toLowerCase();
     const responseSet = agentKnowledge[agentType].responses;
     
-    // Determine a topic to focus the response around
     let topic = context.currentTopic || "this subject";
     
-    // Generate some contextual insight based on the query and agent type
     let insight = "";
     switch(agentType) {
       case 'clinical':
@@ -278,7 +275,7 @@ const ChatInterface = () => {
         }
         break;
         
-      default: // general agent
+      default:
         if (lowerCaseQuery.includes('data') || lowerCaseQuery.includes('statistics')) {
           insight = "a 15% year-over-year change in key indicators";
         } else if (lowerCaseQuery.includes('api') || lowerCaseQuery.includes('source')) {
@@ -290,7 +287,6 @@ const ChatInterface = () => {
         }
     }
     
-    // Special cases that override the template responses
     if (lowerCaseQuery.includes('hello') || lowerCaseQuery.includes('hi ')) {
       return `Hello! I'm the ${agentType.charAt(0).toUpperCase() + agentType.slice(1)} agent. How can I assist you today?`;
     }
@@ -310,7 +306,6 @@ const ChatInterface = () => {
       }
     }
     
-    // Check if the agent was just switched
     if (context.agentSwitched) {
       switch(agentType) {
         case 'clinical':
@@ -322,7 +317,6 @@ const ChatInterface = () => {
       }
     }
     
-    // Avoid repeating the exact same response
     let selectedResponse = "";
     let attempts = 0;
     
@@ -344,7 +338,6 @@ const ChatInterface = () => {
     
     switch(agentType) {
       case 'clinical':
-        // Generate clinical data (e.g., patient statistics, disease prevalence)
         return {
           title: `${topic.charAt(0).toUpperCase() + topic.slice(1)} Statistics`,
           description: `Annual statistics for ${topic}`,
@@ -358,7 +351,6 @@ const ChatInterface = () => {
         };
         
       case 'food':
-        // Generate food/agriculture data (e.g., crop yields, nutrition statistics)
         return {
           title: `${topic.charAt(0).toUpperCase() + topic.slice(1)} Production`,
           description: `Annual production statistics for ${topic}`,
@@ -372,7 +364,6 @@ const ChatInterface = () => {
         };
         
       default:
-        // Generate general economic/demographic data
         return {
           title: `Global ${topic.charAt(0).toUpperCase() + topic.slice(1)} Trends`,
           description: `Annual statistics for ${topic}`,
