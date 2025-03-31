@@ -1,0 +1,184 @@
+
+import React, { useState } from 'react';
+import { X, BarChart, LineChart as LineChartIcon, PieChart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  LineChart, 
+  Line, 
+  BarChart as RechartsBarChart, 
+  Bar, 
+  PieChart as RechartsPieChart, 
+  Pie, 
+  Cell, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
+import { 
+  ChartContainer, 
+  ChartTooltip, 
+  ChartTooltipContent
+} from '@/components/ui/chart';
+
+interface DynamicChartProps {
+  data: any;
+  onClose: () => void;
+}
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+
+const DynamicChart: React.FC<DynamicChartProps> = ({ data, onClose }) => {
+  const [chartType, setChartType] = useState<'line' | 'bar' | 'pie'>('line');
+  
+  // Extract data for visualization
+  const chartData = data.data || [];
+  const title = data.title || 'Data Visualization';
+  const description = data.description || '';
+  
+  // Determine available metrics from the first data point
+  const firstDataPoint = chartData[0] || {};
+  const metrics = Object.keys(firstDataPoint).filter(key => key !== 'year' && key !== 'name' && key !== 'id' && typeof firstDataPoint[key] === 'number');
+
+  // For pie chart, sum up values across all years for each metric
+  const pieChartData = metrics.map(metric => ({
+    name: metric,
+    value: chartData.reduce((sum: number, item: any) => sum + Number(item[metric]), 0)
+  }));
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-4 space-y-4">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-bold">{title}</h2>
+          <p className="text-sm text-gray-500">{description}</p>
+        </div>
+        <Button variant="ghost" size="icon" onClick={onClose}>
+          <X className="w-5 h-5" />
+        </Button>
+      </div>
+
+      <Tabs defaultValue="line" className="w-full" onValueChange={(value) => setChartType(value as any)}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="line" className="flex items-center gap-2">
+            <LineChartIcon className="w-4 h-4" />
+            <span>Line</span>
+          </TabsTrigger>
+          <TabsTrigger value="bar" className="flex items-center gap-2">
+            <BarChart className="w-4 h-4" />
+            <span>Bar</span>
+          </TabsTrigger>
+          <TabsTrigger value="pie" className="flex items-center gap-2">
+            <PieChart className="w-4 h-4" />
+            <span>Pie</span>
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="line" className="mt-4">
+          <div className="h-80 w-full">
+            <ChartContainer 
+              config={{
+                primary: {
+                  theme: {
+                    light: "#0088FE",
+                    dark: "#0088FE",
+                  },
+                },
+                secondary: {
+                  theme: {
+                    light: "#00C49F",
+                    dark: "#00C49F",
+                  },
+                },
+                tertiary: {
+                  theme: {
+                    light: "#FFBB28",
+                    dark: "#FFBB28",
+                  },
+                },
+              }}
+            >
+              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="year" />
+                <YAxis />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Legend />
+                {metrics.slice(0, 3).map((metric, index) => (
+                  <Line 
+                    key={metric} 
+                    type="monotone" 
+                    dataKey={metric} 
+                    name={metric.charAt(0).toUpperCase() + metric.slice(1)}
+                    stroke={COLORS[index % COLORS.length]} 
+                    activeDot={{ r: 8 }}
+                    strokeWidth={2}
+                  />
+                ))}
+              </LineChart>
+            </ChartContainer>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="bar" className="mt-4">
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsBarChart
+                data={chartData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="year" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                {metrics.slice(0, 3).map((metric, index) => (
+                  <Bar 
+                    key={metric} 
+                    dataKey={metric} 
+                    name={metric.charAt(0).toUpperCase() + metric.slice(1)}
+                    fill={COLORS[index % COLORS.length]} 
+                  />
+                ))}
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="pie" className="mt-4">
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsPieChart>
+                <Pie
+                  data={pieChartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {pieChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </div>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="flex justify-end space-x-2 mt-4">
+        <Button variant="outline" onClick={onClose}>Close</Button>
+      </div>
+    </div>
+  );
+};
+
+export default DynamicChart;

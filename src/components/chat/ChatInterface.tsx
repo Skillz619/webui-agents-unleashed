@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, BarChart2, ThumbsUp, ThumbsDown, Plus, Search, Lightbulb, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import AgentHeader from './AgentHeader';
 import MessageItem from './MessageItem';
+import DynamicChart from '../visualization/DynamicChart';
 
 type AgentType = 'general' | 'clinical' | 'food';
 
@@ -15,6 +15,7 @@ type Message = {
   sender: 'user' | 'agent';
   agentType: AgentType;
   timestamp: Date;
+  jsonData?: any;
 };
 
 // Store previous responses to avoid repetition
@@ -70,6 +71,8 @@ const ChatInterface = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<AgentType>('general');
   const [conversationContext, setConversationContext] = useState<Record<string, any>>({});
+  const [showVisualization, setShowVisualization] = useState(false);
+  const [visualizationData, setVisualizationData] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -121,6 +124,13 @@ const ChatInterface = () => {
         newContext.currentTopic = extractedTopics[0];
       }
       
+      // Check if JSON format was requested
+      const isJsonRequested = lowerCaseInput.includes('json') || 
+                             lowerCaseInput.includes('data format') || 
+                             lowerCaseInput.includes('format data');
+      
+      newContext.jsonRequested = isJsonRequested;
+      
       // Simple keyword-based agent routing
       if (lowerCaseInput.includes('clinical') || lowerCaseInput.includes('medical') || 
           lowerCaseInput.includes('health') || lowerCaseInput.includes('disease') || 
@@ -143,7 +153,15 @@ const ChatInterface = () => {
       
       setConversationContext(newContext);
       
-      const responseContent = getAgentResponse(agentType, input, newContext);
+      let responseContent = getAgentResponse(agentType, input, newContext);
+      let jsonData = null;
+      
+      // If JSON was requested, generate sample data based on the agent type and query
+      if (isJsonRequested) {
+        jsonData = generateSampleData(agentType, input, extractedTopics);
+        // Append JSON data to the response
+        responseContent += `\n\nHere's the data in JSON format:\n\`\`\`json\n${JSON.stringify(jsonData, null, 2)}\n\`\`\``;
+      }
       
       const agentMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -151,6 +169,7 @@ const ChatInterface = () => {
         sender: 'agent',
         agentType: agentType,
         timestamp: new Date(),
+        jsonData: jsonData
       };
       
       // Store this response to avoid repetition
@@ -160,6 +179,12 @@ const ChatInterface = () => {
       }
       
       setMessages(prev => [...prev, agentMessage]);
+      
+      // If JSON data is available, make it available for visualization
+      if (jsonData) {
+        setVisualizationData(jsonData);
+      }
+      
       setIsTyping(false);
     }, 1500);
   };
@@ -312,6 +337,56 @@ const ChatInterface = () => {
     return selectedResponse;
   };
 
+  const generateSampleData = (agentType: AgentType, query: string, topics: string[]): any => {
+    const topic = topics.length > 0 ? topics[0] : "general";
+    const currentYear = new Date().getFullYear();
+    const yearRange = Array.from({length: 10}, (_, i) => (currentYear - 10 + i).toString());
+    
+    switch(agentType) {
+      case 'clinical':
+        // Generate clinical data (e.g., patient statistics, disease prevalence)
+        return {
+          title: `${topic.charAt(0).toUpperCase() + topic.slice(1)} Statistics`,
+          description: `Annual statistics for ${topic}`,
+          years: yearRange,
+          data: yearRange.map(year => ({
+            year,
+            cases: Math.floor(Math.random() * 5000) + 1000,
+            recoveries: Math.floor(Math.random() * 4000) + 800,
+            treatments: Math.floor(Math.random() * 3000) + 600
+          }))
+        };
+        
+      case 'food':
+        // Generate food/agriculture data (e.g., crop yields, nutrition statistics)
+        return {
+          title: `${topic.charAt(0).toUpperCase() + topic.slice(1)} Production`,
+          description: `Annual production statistics for ${topic}`,
+          years: yearRange,
+          data: yearRange.map(year => ({
+            year,
+            production: Math.floor(Math.random() * 1000) + 200,
+            consumption: Math.floor(Math.random() * 800) + 150,
+            export: Math.floor(Math.random() * 400) + 50
+          }))
+        };
+        
+      default:
+        // Generate general economic/demographic data
+        return {
+          title: `Global ${topic.charAt(0).toUpperCase() + topic.slice(1)} Trends`,
+          description: `Annual statistics for ${topic}`,
+          years: yearRange,
+          data: yearRange.map(year => ({
+            year,
+            value: Math.floor(Math.random() * 100) + 20,
+            growth: (Math.random() * 10 - 5).toFixed(1),
+            indicator: Math.floor(Math.random() * 50) + 10
+          }))
+        };
+    }
+  };
+
   const changeAgent = (type: AgentType) => {
     if (type !== currentAgent) {
       setCurrentAgent(type);
@@ -332,12 +407,26 @@ const ChatInterface = () => {
     }
   };
 
+  const toggleVisualization = () => {
+    if (!visualizationData) {
+      toast({
+        title: "No data available",
+        description: "Try asking for data in JSON format first",
+        variant: "destructive"
+      });
+      return;
+    }
+    setShowVisualization(!showVisualization);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <AgentHeader currentAgent={currentAgent} onChangeAgent={changeAgent} />
       
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
-        {messages.length === 0 ? (
+        {showVisualization ? (
+          <DynamicChart data={visualizationData} onClose={() => setShowVisualization(false)} />
+        ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <div className="text-2xl mb-4">Ask anything</div>
             <div className="text-sm">Get started by asking a question</div>
@@ -390,7 +479,13 @@ const ChatInterface = () => {
       {messages.length > 0 && (
         <div className="p-4 flex justify-end border-t">
           <div className="flex space-x-2">
-            <Button variant="outline" size="icon">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={toggleVisualization}
+              className={visualizationData ? "" : "opacity-50"}
+              title={visualizationData ? "View visualization" : "No data available for visualization"}
+            >
               <BarChart2 className="w-5 h-5" />
             </Button>
             <Button variant="outline" size="icon">
@@ -407,4 +502,3 @@ const ChatInterface = () => {
 };
 
 export default ChatInterface;
-
