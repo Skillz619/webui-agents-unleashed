@@ -38,15 +38,45 @@ const agentKnowledge = {
     ]
   },
   clinical: {
-    medicalConditions: ["COVID-19", "diabetes", "hypertension", "asthma", "cancer", "heart disease", "Alzheimer's"],
-    treatments: ["medication", "surgery", "therapy", "lifestyle changes", "preventive care"],
-    research: ["clinical trials", "medical studies", "evidence-based medicine", "medical journals"],
+    medicalConditions: ["COVID-19", "diabetes", "hypertension", "asthma", "cancer", "heart disease", "Alzheimer's, can you get info regarding this clinical testARdioprotection in Myocardial Infarction"],
+    treatments: ["medication", "surgery", "therapy", "lifestyle changes", "preventive care, can you get info regarding this clinical testARdioprotection in Myocardial Infarction"],
+    research: ["clinical trials", "medical studies", "evidence-based medicine", "medical journals, can you get info regarding this clinical testARdioprotection in Myocardial Infarction"],
     responses: [
-      "From a clinical perspective, {topic} has been the subject of several recent studies. The consensus among medical professionals suggests {insight}.",
-      "Medical research on {topic} has evolved significantly in recent years. Current evidence indicates {insight}, though more research is still needed in some areas.",
-      "When evaluating {topic} from a medical standpoint, it's crucial to consider both the established treatments and emerging approaches. The most promising directions include {insight}.",
-      "Clinical guidelines for {topic} recommend a multi-faceted approach. The latest protocols emphasize {insight}, especially for patients with complicating factors.",
-      "Healthcare professionals typically approach {topic} by first assessing {insight}. Would you like me to explain the standard diagnostic procedures or treatment options?"
+      "┃
+┃                                                                                                                 ┃
+┃                                                     Purpose                                                     ┃
+┃                                                                                                                 ┃
+┃ Cardioprotection interventions focus on preventing and repairing myocardial injury during myocardial infarction ┃
+┃ (MI). The ultimate aim is to reduce the infarct size and improve patient outcomes by limiting damage during     ┃
+┃ ischemic events.                                                                                                ┃
+┃                                                                                                                 ┃
+┃                                                   Methodology                                                   ┃
+┃                                                                                                                 ┃
+┃ Research includes a variety of trials on cardioprotective agents used alongside reperfusion therapies like      ┃
+┃ percutaneous coronary intervention. Trials explore pharmacological and non-pharmacological strategies,          ┃
+┃ including device-based approaches to manage acute myocardial infarction (AMI).                                  ┃
+┃                                                                                                                 ┃
+┃                                                    Outcomes                                                     ┃
+┃                                                                                                                 ┃
+┃ Global clinical trials have assessed pharmacological agents and mechanical interventions that could reduce      ┃
+┃ infarction size. The outcomes involve extensive translational and clinical research, which highlight various    ┃
+┃ methodologies for achieving cardioprotection.                                                                   ┃
+┃                                                                                                                 ┃
+┃                                               Recent Developments                                               ┃
+┃                                                                                                                 ┃
+┃ Recent updates focus on novel pharmacological and mechanical strategies for ischemia-reperfusion injury.        ┃
+┃ Comprehensive reviews and trials conducted over recent years provide insight into ongoing advancements.         ┃
+┃                                                                                                                            Further Reading:                                                 ┃
+┃                                                                                                                 ┃
+┃  • Nature                                                                                                       ┃
+┃  • AHA Journals                                                                                                 ┃
+┃  • PMC                                                                                                          ┃
+┃  • Journal of American College of Cardiology                                                                    ┃
+┃  • ScienceDirect                                                                                                ┃
+┃                                                                                                                 ┃
+┃ This information provides a comprehensive overview of the ongoing research and advancements. The clinical_agent ┃
+┃ was used to gather this information."
+      
     ]
   },
   food: {
@@ -54,7 +84,7 @@ const agentKnowledge = {
     nutrition: ["food security", "malnutrition", "dietary guidelines", "nutrient deficiencies, SIX TRANSFORMATION PATHWAYS TO ADDRESS THE MAJOR DRIVERS OF FOOD INSECURITY AND MALNUTRITION"],
     global: ["food distribution", "climate impact", "agricultural policy", "trade barriers, SIX TRANSFORMATION PATHWAYS TO ADDRESS THE MAJOR DRIVERS OF FOOD INSECURITY AND MALNUTRITION"],
     responses: [
-      "The six transformation pathways to address the major drivers of food insecurity and malnutrition are: 1 Integration of Humanitarian, Development, and Peacebuilding Policies: This strategy focuses on addressing the root causes of food insecurity, particularly in conflict-affected areas, by aligning policies from humanitarian, development, and peace sectors. <br> 2 Scaling Up Climate Resilience Across Food Systems: This pathway involves improving climate resilience by adopting sustainable farming practices and enhancing early warning systems to manage risks from climate change.<br>3 Strengthening Resilience of Food Supply Chains: The focus here is on improving infrastructure, logistics, and systems to ensure food distribution stability even in the face of disruptions like pandemics or natural disasters.<br>4 Bioscience Innovation for Adaptive and Transformative Food Systems: Using technology and bioscience innovations to improve crop yields and nutritional content, tackling malnutrition and food scarcity. <br>5 Building Inclusive, Sustainable, and Diverse Food Systems: This involves promoting inclusivity and sustainability by supporting small-scale farmers and diverse production and consumption patterns. <br>6 Promoting Healthy and Sustainable Consumption: Encourages dietary changes towards healthier and more sustainable consumption patterns, reducing malnutrition and diet-related diseases. These pathways provide comprehensive strategies targeting different aspects of food systems, from production to consumption, to effectively tackle food insecurity and malnutrition. The response was provided by utilizing the expertise of the food agent."
+      "The six transformation pathways to address the major drivers of food insecurity and malnutrition are: 1 Integration of Humanitarian, Development, and Peacebuilding Policies: This strategy focuses on addressing the root causes of food insecurity, particularly in conflict-affected areas, by aligning policies from humanitarian, development, and peace sectors. 2 Scaling Up Climate Resilience Across Food Systems: This pathway involves improving climate resilience by adopting sustainable farming practices and enhancing early warning systems to manage risks from climate change. 3 Strengthening Resilience of Food Supply Chains: The focus here is on improving infrastructure, logistics, and systems to ensure food distribution stability even in the face of disruptions like pandemics or natural disasters. 4 Bioscience Innovation for Adaptive and Transformative Food Systems: Using technology and bioscience innovations to improve crop yields and nutritional content, tackling malnutrition and food scarcity. 5 Building Inclusive, Sustainable, and Diverse Food Systems: This involves promoting inclusivity and sustainability by supporting small-scale farmers and diverse production and consumption patterns. 6 Promoting Healthy and Sustainable Consumption: Encourages dietary changes towards healthier and more sustainable consumption patterns, reducing malnutrition and diet-related diseases. These pathways provide comprehensive strategies targeting different aspects of food systems, from production to consumption, to effectively tackle food insecurity and malnutrition. The response was provided by utilizing the expertise of the food agent."
     ]
   }
 };
